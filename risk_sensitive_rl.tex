@@ -1,0 +1,79 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+% \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading nips_2017
+%
+% to avoid loading the natbib package, add option nonatbib:
+
+\usepackage[nonatbib, final]{nips_2017}
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{amsmath, amssymb, amsfonts, amsthm}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\bibliographystyle{ieeetr}
+
+\title{Risk-sensitive deep reinforcement learning}
+
+\author{Gilwoo Lee \\
+  \texttt{gilwoo@cs.uw.edu} \\
+  %% examples of more authors
+  \And
+  Siddhartha S. Srinivasa \\
+  \texttt{siddh@cs.uw.edu}
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Adversarial Reinforcement Learning takes the following differential game-theoretic approach. It utilizes the concept of agent and disturber, and solves the following minimax game for $u$ and $w$:
+\begin{align*}
+V(s) = \max_a \min_w \mathbb{E} \bigg[J(s)\bigg]
+\end{align*}
+where $a$ is the action of the agent and $w$ is the disturbance caused by the disturber. This system is typically trained by an iterative procedure for maximizing the reward function for the agent and minimizing it for the disturber. Several approaches\cite{morimoto2005robust, pinto2017robust, pattanaik2017robust} have shown that such an approach results in a robust RL policy.
+
+Another branch of RL which aims to discover robust policy w.r.t. model uncertainty and disturbance is risk-sensitive RL. One of the commonly used utility functions in Risk-Sensitive RL is an exponential reward function. Using $\frac{1}{\beta}\log(\mathbb{E}[\exp(\beta J)])$ instead of $\mathbb{E}[J]$ lets us take into account higher order moments of the reward function. Taking Taylor expansion, we get
+\begin{align*}
+\max_\theta \frac{1}{\beta}\mathbb{E}\bigg[\exp(\beta J)\bigg]
+ &\approx \max_\theta  \mathbb{E}[ J] + \beta \frac{var(J)}{2} + o(\beta^2J^3)
+\end{align*}
+Risk is penalized if $\beta< 0$ and encouraged if $\beta > 0$.
+
+Consider the risk-aversive case, $\beta < 0$. If we put a disturber in this exponential utility function, a disturber would not only play the role of minimizing $\mathbb{E}[J]$ but also increase the variance of $J$, i.e.,
+\begin{align*}
+V(s) = \max_a \min_w \frac{1}{\beta}\mathbb{E} \bigg[\exp(\beta J)\bigg] \approx  \max_a \min_w \mathbb{E}[ J] + \beta \frac{var(J)}{2}
+\end{align*}
+This implies that by using the exponential utility function for the Adversarial Reinforcement Learning, we train the disturber such that it not only reduces the expected total reward but also increase the variance, and train the agent to learn to minimize variance against such a disturber while maximizing the expected reward.
+
+
+\subsection{Risk-seeking to Risk-aversive}
+
+To encourage exploration during early training, one may consider starting from $\beta > 0$ and slowly tuning $\beta $ to be positive. When $\beta > 0$, the role of disturber would be to reduce the variance, so it would only hinder the learning.
+
+\subsection{Helper to Disturber}
+
+An RL agent faces two main challenges:
+\begin{enumerate}
+    \item the agent does not know the desired trajectory that maximizes rewards
+    \item the agenet does not know the desired actions that leads to the desired trajectory
+\end{enumerate}
+
+Typical RL algorithms aim to discover both simultaneously.
+To aid learning in the early phase, one may consider a \emph{fully-actuated} helper who helps the agent to quickly discover the directions which maximize reward. For example, when an agent learns to ride a bicycle, the agent needs to spend a lot of time discovering whether the bike needs to move forward, as well as the particular pedalling actions that makes the bike move forward. Instead, a fully actuated helper can first aid in discovering that moving forward is important, and gradually decrease its actuation to let the agent discover how to move forward.
+
+
+\bibliography{risk_sensitive_rl}
+
+\end{document}
